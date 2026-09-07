@@ -205,21 +205,45 @@ function checkAnswer(questionId) {
 }
 
 // ==================== QUILL EDITOR ====================
-function initQuillEditor() {
-    if (typeof Quill !== 'undefined') {
-        var quill = new Quill('#questionEditor', {
-            theme: 'snow',
-            placeholder: 'Tulis pertanyaan di sini...',
-            modules: {
-                toolbar: [
-                    ['bold', 'italic', 'underline'],
-                    ['formula'], // Support formula
-                    [{ list: 'ordered' }, { list: 'bullet' }],
-                    ['clean']
-                ]
+function initTinyMCEEditor() {
+    if (typeof tinymce !== 'undefined') {
+        tinymce.init({
+            selector: '#questionEditor',
+            height: 300,
+            menubar: true,
+            plugins: [
+                'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+                'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                'insertdatetime', 'media', 'table', 'help', 'wordcount', 'mathslate'
+            ],
+            toolbar: 'undo redo | blocks | ' +
+                'bold italic backcolor | alignleft aligncenter ' +
+                'alignright alignjustify | bullist numlist outdent indent | ' +
+                'removeformat | mathslate | help',
+            mathslate: {
+                // Konfigurasi Mathslate
+                macros: {
+                    "\\R": "\\mathbb{R}",
+                    "\\N": "\\mathbb{N}",
+                    "\\Z": "\\mathbb{Z}"
+                }
+            },
+            setup: function(editor) {
+                editor.on('change', function() {
+                    // Sinkronisasi dengan hidden input
+                    document.getElementById('questionInput').value = editor.getContent();
+                });
             }
         });
-        
+    }
+}
+
+// Panggil di DOMContentLoaded
+document.addEventListener('DOMContentLoaded', function() {
+    // ... kode lain
+    initTinyMCEEditor();
+    // ...
+});        
         // Simpan referensi
         window.questionEditor = quill;
         
