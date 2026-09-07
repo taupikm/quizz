@@ -8,102 +8,76 @@
     <!-- CSS -->
     <link rel="stylesheet" href="css/style.css">
     
-    <!-- MathJax untuk render rumus matematika -->
+    <!-- MathJax untuk render rumus -->
     <script>
         window.MathJax = {
-            tex: {
-                inlineMath: [['\\(', '\\)']],
-                displayMath: [['\\[', '\\]']]
-            },
-            svg: {
-                fontCache: 'global'
-            }
+            tex: { inlineMath: [['\\(', '\\)']] },
+            svg: { fontCache: 'global' }
         };
     </script>
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.tiny.cloud/1/YOUR_API_KEY/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
-
-    <!-- Tambahkan Mathslate Plugin -->
-    <script src="https://cdn.jsdelivr.net/npm/@benrbray/tinymce-mathslate@1.0.0/plugin.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@benrbray/tinymce-mathslate@1.0.0/plugin.min.css">
     
+    <!-- CKEditor 5 (Classic) dengan Plugin Math -->
+    <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
+    <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/translations/id.js"></script>
+
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>📝 Aplikasi Soal</h1>
-            <div class="controls">
-                <select id="categoryFilter">
-                    <option value="all">Semua Kategori</option>
-                    <option value="matematika">Matematika</option>
-                    <option value="fisika">Fisika</option>
-                    <option value="kimia">Kimia</option>
-                </select>
-                <button id="loadQuestionsBtn" class="btn-primary">Muat Soal</button>
-                <button id="addQuestionBtn" class="btn-secondary">+ Tambah Soal</button>
-            </div>
-        </header>
-        
-        <main>
-            <!-- Soal akan dirender di sini -->
-            <div id="questionsContainer">
-                <div class="loading">Memuat soal...</div>
-            </div>
-            
-            <!-- Modal untuk menambah soal -->
-            <div id="addQuestionModal" class="modal" style="display:none;">
-                <div class="modal-content">
-                    <span class="close">&times;</span>
-                    <h2>Tambah Soal Baru</h2>
-                    <form id="addQuestionForm">
-                        <div class="form-group">
-                            <label>Pertanyaan:</label>
-                            <textarea id="questionEditor"></textarea>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Opsi Jawaban (pisahkan dengan koma):</label>
-                            <input type="text" id="optionsInput" placeholder="opsi1, opsi2, opsi3, opsi4">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Jawaban Benar:</label>
-                            <input type="text" id="correctAnswerInput">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Kategori:</label>
-                            <select id="categoryInput">
-                                <option value="matematika">Matematika</option>
-                                <option value="fisika">Fisika</option>
-                                <option value="kimia">Kimia</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>URL Gambar (opsional):</label>
-                            <input type="text" id="imageUrlInput" placeholder="https://...">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Rumus LaTeX (opsional):</label>
-                            <input type="text" id="latexInput" placeholder="x^2 + 2x + 1 = 0">
-                            <small>Contoh: x^2 + 2x + 1 = 0 (akan ditampilkan sebagai \(x^2 + 2x + 1 = 0\))</small>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Upload Gambar:</label>
-                            <input type="file" id="imageUpload" accept="image/*">
-                        </div>
-                        
-                        <button type="submit" class="btn-primary">Simpan Soal</button>
-                    </form>
+    <!-- ... kode lain ... -->
+
+    <!-- MODAL TAMBAH SOAL -->
+    <div id="addQuestionModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Tambah Soal Baru</h2>
+            <form id="addQuestionForm">
+                <div class="form-group">
+                    <label>Pertanyaan:</label>
+                    <!-- Textarea yang akan diubah menjadi editor -->
+                    <textarea id="questionEditor" name="question"></textarea>
                 </div>
-            </div>
-        </main>
+                
+                <div class="form-group">
+                    <label>Opsi Jawaban (pisahkan dengan koma):</label>
+                    <input type="text" id="optionsInput" placeholder="opsi1, opsi2, opsi3, opsi4">
+                </div>
+                
+                <div class="form-group">
+                    <label>Jawaban Benar:</label>
+                    <input type="text" id="correctAnswerInput">
+                </div>
+                
+                <div class="form-group">
+                    <label>Kategori:</label>
+                    <select id="categoryInput">
+                        <option value="matematika">Matematika</option>
+                        <option value="fisika">Fisika</option>
+                        <option value="kimia">Kimia</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>URL Gambar (opsional):</label>
+                    <input type="text" id="imageUrlInput" placeholder="https://...">
+                </div>
+                
+                <div class="form-group">
+                    <label>Rumus LaTeX (opsional):</label>
+                    <input type="text" id="latexInput" placeholder="x^2 + 2x + 1 = 0">
+                </div>
+                
+                <div class="form-group">
+                    <label>Upload Gambar:</label>
+                    <input type="file" id="imageUpload" accept="image/*">
+                    <div id="imagePreview"></div>
+                </div>
+                
+                <button type="submit" class="btn-primary">Simpan Soal</button>
+            </form>
+        </div>
     </div>
     
+    <!-- JavaScript -->
     <script src="js/config.js"></script>
     <script src="js/app.js"></script>
 </body>
