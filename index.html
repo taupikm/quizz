@@ -5,80 +5,299 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aplikasi Soal</title>
     
-    <!-- CSS -->
-    <link rel="stylesheet" href="css/style.css">
-    
-    <!-- MathJax untuk render rumus -->
-    <script>
-        window.MathJax = {
-            tex: { inlineMath: [['\\(', '\\)']] },
-            svg: { fontCache: 'global' }
-        };
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
-    
-    <!-- CKEditor 5 (Classic) dengan Plugin Math -->
-    <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
-    <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/translations/id.js"></script>
-
+    <style>
+        /* Style minimal untuk testing */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f5f7fa; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        header { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+        h1 { color: #2c3e50; }
+        .controls { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .btn-primary { background: #3498db; color: white; }
+        .btn-secondary { background: #2ecc71; color: white; }
+        .question-card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 15px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 30px; border-radius: 16px; max-width: 700px; width: 90%; max-height: 90vh; overflow-y: auto; }
+        .close { float: right; font-size: 28px; cursor: pointer; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+        #questionEditor { min-height: 150px; }
+        .loading { text-align: center; padding: 40px; color: #7f8c8d; }
+        select, input { padding: 10px 15px; border: 1px solid #ddd; border-radius: 8px; }
+    </style>
 </head>
 <body>
-    <!-- ... kode lain ... -->
-
-    <!-- MODAL TAMBAH SOAL -->
-    <div id="addQuestionModal" class="modal" style="display:none;">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Tambah Soal Baru</h2>
-            <form id="addQuestionForm">
-                <div class="form-group">
-                    <label>Pertanyaan:</label>
-                    <!-- Textarea yang akan diubah menjadi editor -->
-                    <textarea id="questionEditor" name="question"></textarea>
+    <div class="container">
+        <header>
+            <h1>📝 Aplikasi Soal</h1>
+            <div class="controls">
+                <select id="categoryFilter">
+                    <option value="all">Semua Kategori</option>
+                    <option value="matematika">Matematika</option>
+                    <option value="fisika">Fisika</option>
+                    <option value="kimia">Kimia</option>
+                </select>
+                <button id="loadQuestionsBtn" class="btn btn-primary">Muat Soal</button>
+                <button id="addQuestionBtn" class="btn btn-secondary">+ Tambah Soal</button>
+            </div>
+        </header>
+        
+        <main>
+            <div id="questionsContainer">
+                <div class="loading">Memuat soal...</div>
+            </div>
+            
+            <!-- MODAL TAMBAH SOAL -->
+            <div id="addQuestionModal" class="modal">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h2>Tambah Soal Baru</h2>
+                    <form id="addQuestionForm">
+                        <div class="form-group">
+                            <label>Pertanyaan:</label>
+                            <textarea id="questionEditor" placeholder="Tulis pertanyaan di sini..."></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Opsi Jawaban (pisahkan dengan koma):</label>
+                            <input type="text" id="optionsInput" placeholder="opsi1, opsi2, opsi3, opsi4">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Jawaban Benar:</label>
+                            <input type="text" id="correctAnswerInput">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Kategori:</label>
+                            <select id="categoryInput">
+                                <option value="matematika">Matematika</option>
+                                <option value="fisika">Fisika</option>
+                                <option value="kimia">Kimia</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>URL Gambar (opsional):</label>
+                            <input type="text" id="imageUrlInput" placeholder="https://...">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Rumus LaTeX (opsional):</label>
+                            <input type="text" id="latexInput" placeholder="x^2 + 2x + 1 = 0">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Upload Gambar:</label>
+                            <input type="file" id="imageUpload" accept="image/*">
+                            <div id="imagePreview"></div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Simpan Soal</button>
+                    </form>
                 </div>
-                
-                <div class="form-group">
-                    <label>Opsi Jawaban (pisahkan dengan koma):</label>
-                    <input type="text" id="optionsInput" placeholder="opsi1, opsi2, opsi3, opsi4">
-                </div>
-                
-                <div class="form-group">
-                    <label>Jawaban Benar:</label>
-                    <input type="text" id="correctAnswerInput">
-                </div>
-                
-                <div class="form-group">
-                    <label>Kategori:</label>
-                    <select id="categoryInput">
-                        <option value="matematika">Matematika</option>
-                        <option value="fisika">Fisika</option>
-                        <option value="kimia">Kimia</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>URL Gambar (opsional):</label>
-                    <input type="text" id="imageUrlInput" placeholder="https://...">
-                </div>
-                
-                <div class="form-group">
-                    <label>Rumus LaTeX (opsional):</label>
-                    <input type="text" id="latexInput" placeholder="x^2 + 2x + 1 = 0">
-                </div>
-                
-                <div class="form-group">
-                    <label>Upload Gambar:</label>
-                    <input type="file" id="imageUpload" accept="image/*">
-                    <div id="imagePreview"></div>
-                </div>
-                
-                <button type="submit" class="btn-primary">Simpan Soal</button>
-            </form>
-        </div>
+            </div>
+        </main>
     </div>
-    
-    <!-- JavaScript -->
-    <script src="js/config.js"></script>
-    <script src="js/app.js"></script>
+
+    <!-- ============ JAVASCRIPT ============ -->
+    <!-- Konfigurasi (Ganti dengan URL Web App Anda) -->
+    <script>
+        var APP_CONFIG = {
+            API_URL: 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec'
+        };
+    </script>
+
+    <!-- App.js (Semua fungsi di dalam satu file untuk menghindari error loading) -->
+    <script>
+        // ==================== STATE ====================
+        var state = {
+            questions: [],
+            currentPage: 1,
+            pageSize: 10,
+            category: 'all'
+        };
+
+        // ==================== DOM READY ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM Ready - Aplikasi Soal');
+            
+            // Event listener
+            document.getElementById('loadQuestionsBtn').addEventListener('click', loadQuestions);
+            document.getElementById('addQuestionBtn').addEventListener('click', openAddQuestionModal);
+            document.querySelector('.close').addEventListener('click', closeAddQuestionModal);
+            document.getElementById('addQuestionForm').addEventListener('submit', saveQuestion);
+            document.getElementById('categoryFilter').addEventListener('change', function() {
+                state.category = this.value;
+                loadQuestions();
+            });
+            document.getElementById('imageUpload').addEventListener('change', handleImageUpload);
+            
+            // Load awal
+            loadQuestions();
+        });
+
+        // ==================== LOAD QUESTIONS ====================
+        function loadQuestions() {
+            var container = document.getElementById('questionsContainer');
+            container.innerHTML = '<div class="loading">Memuat soal...</div>';
+            
+            var url = APP_CONFIG.API_URL + '?action=getQuestions&category=' + state.category;
+            
+            fetch(url)
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (data.status === 'success') {
+                        state.questions = data.data || [];
+                        renderQuestions(state.questions);
+                    } else {
+                        container.innerHTML = '<div class="loading">Gagal memuat soal: ' + (data.message || 'Unknown error') + '</div>';
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Fetch error:', error);
+                    container.innerHTML = '<div class="loading">Error: Gagal terhubung ke server. Pastikan API URL benar.</div>';
+                });
+        }
+
+        // ==================== RENDER QUESTIONS ====================
+        function renderQuestions(questions) {
+            var container = document.getElementById('questionsContainer');
+            
+            if (!questions || questions.length === 0) {
+                container.innerHTML = '<div class="loading">Belum ada soal. Klik "+ Tambah Soal" untuk menambahkan.</div>';
+                return;
+            }
+            
+            var html = '';
+            questions.forEach(function(q, index) {
+                html += '<div class="question-card">';
+                html += '<div class="question-number">Soal #' + (index + 1) + ' • ' + (q.category || 'Umum') + '</div>';
+                html += '<div class="question-text">' + (q.question || '') + '</div>';
+                
+                if (q.latexFormula) {
+                    html += '<div class="question-formula">\\(' + q.latexFormula + '\\)</div>';
+                }
+                
+                if (q.imageUrl) {
+                    html += '<img src="' + q.imageUrl + '" class="question-image" style="max-width:100%;max-height:200px;margin:10px 0;">';
+                }
+                
+                if (q.options) {
+                    try {
+                        var options = JSON.parse(q.options);
+                        html += '<ul class="options-list" style="list-style:none;padding:0;">';
+                        options.forEach(function(option) {
+                            html += '<li style="padding:8px 12px;background:#f8f9fa;margin:5px 0;border-radius:8px;">' + option + '</li>';
+                        });
+                        html += '</ul>';
+                    } catch(e) {
+                        html += '<p>Opsi: ' + q.options + '</p>';
+                    }
+                }
+                
+                html += '</div>';
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // ==================== MODAL ====================
+        function openAddQuestionModal() {
+            var modal = document.getElementById('addQuestionModal');
+            modal.style.display = 'flex';
+            document.getElementById('addQuestionForm').reset();
+            document.getElementById('imagePreview').innerHTML = '';
+            document.getElementById('questionEditor').value = '';
+            
+            // Fokus ke textarea
+            setTimeout(function() {
+                document.getElementById('questionEditor').focus();
+            }, 100);
+        }
+
+        function closeAddQuestionModal() {
+            document.getElementById('addQuestionModal').style.display = 'none';
+        }
+
+        // ==================== HANDLE IMAGE UPLOAD ====================
+        function handleImageUpload(e) {
+            var file = e.target.files[0];
+            if (!file) return;
+            
+            var reader = new FileReader();
+            reader.onload = function(event) {
+                var preview = document.getElementById('imagePreview');
+                preview.innerHTML = '<img src="' + event.target.result + '" style="max-width:200px;max-height:200px;border-radius:8px;margin-top:10px;">';
+                window.tempImageData = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // ==================== SAVE QUESTION ====================
+        function saveQuestion(e) {
+            e.preventDefault();
+            
+            var questionText = document.getElementById('questionEditor').value || 'Pertanyaan baru';
+            var optionsRaw = document.getElementById('optionsInput').value;
+            var correctAnswer = document.getElementById('correctAnswerInput').value;
+            var category = document.getElementById('categoryInput').value;
+            var imageUrl = document.getElementById('imageUrlInput').value;
+            var latexFormula = document.getElementById('latexInput').value;
+            
+            if (!optionsRaw) {
+                alert('Masukkan opsi jawaban!');
+                return;
+            }
+            
+            if (!correctAnswer) {
+                alert('Masukkan jawaban benar!');
+                return;
+            }
+            
+            var options = optionsRaw.split(',').map(function(s) { return s.trim(); });
+            
+            var data = {
+                action: 'saveQuestion',
+                question: questionText,
+                options: JSON.stringify(options),
+                correctAnswer: correctAnswer,
+                category: category,
+                imageUrl: imageUrl,
+                latexFormula: latexFormula
+            };
+            
+            console.log('Menyimpan soal:', data);
+            
+            // Kirim ke server (mode no-cors untuk testing)
+            fetch(APP_CONFIG.API_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(function() {
+                alert('Soal berhasil disimpan!');
+                closeAddQuestionModal();
+                loadQuestions();
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                alert('Gagal menyimpan soal. Silakan coba lagi.');
+            });
+        }
+
+        // Override close modal jika klik di luar
+        window.onclick = function(event) {
+            var modal = document.getElementById('addQuestionModal');
+            if (event.target === modal) {
+                closeAddQuestionModal();
+            }
+        };
+
+        console.log('Aplikasi Soal siap!');
+    </script>
 </body>
 </html>
